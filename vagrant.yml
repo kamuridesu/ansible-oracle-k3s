@@ -1,0 +1,15 @@
+IMAGE: "debian/bullseye64"
+MACHINES:
+  - NAME: "master01"
+    CPU: "2"
+    MEMORY: "2000"
+    TYPE: "master"
+    IP: 10.0.1.100
+    SCRIPT: master.sh
+
+  # - NAME: "worker01"
+  #   CPU: "1"
+  #   MEMORY: "1000"
+  #   TYPE: "worker"
+  #   IP: 10.0.1.101
+  #   SCRIPT: worker.sh
