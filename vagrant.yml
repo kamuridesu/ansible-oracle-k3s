@@ -2,7 +2,7 @@ IMAGE: "debian/bullseye64"
 MACHINES:
   - NAME: "master01"
     CPU: "2"
-    MEMORY: "2000"
+    MEMORY: "4000"
     TYPE: "master"
     IP: 10.0.1.100
     SCRIPT: master.sh

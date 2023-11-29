@@ -60,9 +60,15 @@ Vagrant.configure("2") do |config|
         vb.cpus = virtualmachines["CPU"]
       end
 
+      box.trigger.after :provision do |trigger|
+        trigger.info = "Create token"
+        trigger.run = {path: "host.sh"}
+      end
+
       if (virtualmachines.has_key?("SCRIPT")) then
         box.vm.provision "shell", path: virtualmachines["SCRIPT"]
       end
+      
     end
   end
 end
