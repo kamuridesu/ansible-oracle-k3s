@@ -7,5 +7,4 @@ which kubectl > /dev/null; if [ "$?" -ne "0" ]; then
     install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 fi
 
-PATH="$PATH:/usr/games"
-export PATH
+export PATH="$PATH:/usr/games"

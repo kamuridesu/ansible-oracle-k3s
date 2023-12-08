@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: argo-gateway
+  namespace: argocd
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - hosts:
+        - argocd.kube.local
+      port:
+        name: http
+        number: 80
+        protocol: HTTP

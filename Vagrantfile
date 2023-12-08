@@ -48,6 +48,8 @@ Vagrant.configure("2") do |config|
   MACHINES.each do |virtualmachines|
     config.vm.define virtualmachines["NAME"] do |box|
 
+      box.ssh.insert_key = false
+
       box.vm.box_check_update = false
       box.vm.network "private_network", ip: virtualmachines["IP"]
       box.vm.hostname = virtualmachines["NAME"]

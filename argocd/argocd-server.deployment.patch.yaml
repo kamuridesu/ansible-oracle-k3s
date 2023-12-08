@@ -1,0 +1,9 @@
+# This patch allows insecure communication with ArgoCD. Without it, we would have to use HTTPS, which needs a certificate.
+spec:
+  template:
+    spec:
+      containers:
+      - args:
+        - /usr/local/bin/argocd-server
+        - --insecure
+        name: argocd-server

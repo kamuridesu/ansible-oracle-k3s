@@ -3,7 +3,7 @@ PATH="$PATH:/usr/games"
 export PATH
 if [ ! -f /etc/rancher/k3s/k3s.yaml ]; then
     cowsay Installing K3s...
-    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--flannel-backend=none --cluster-cidr=192.168.0.0/16 --disable-network-policy --disable=traefik" sh -
+    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--flannel-backend=none --cluster-cidr=192.168.0.0/16 --disable-network-policy --disable=traefik --tls-san 10.0.1.100 --advertise-address 10.0.1.100" sh -
     mkdir -p /home/vagrant/.kube
     cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
 fi
@@ -50,6 +50,8 @@ if [[ "$(kubectl get pods -n istio-ingress | tail -1 | awk '{print $3}')" != "Ru
 fi
 cowsay Istio is running!
 
+. /vagrant/argocd/argocd.sh
+
 kubectl get nodes -o wide
 
-bash /vagrant/configs/shell/provision_master.sh
+# bash /vagrant/configs/shell/provision_master.sh
