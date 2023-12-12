@@ -29,6 +29,8 @@ def get_k3s_kubeconfig() -> str:
     output = "\n".join(out.decode().splitlines()[1:]).replace("127.0.0.1", "10.0.1.100")
     with open(TARGET_FILE, "w") as f:
         f.write(output)
+    return output
+
 
 print("Getting config...")
 get_k3s_kubeconfig()
