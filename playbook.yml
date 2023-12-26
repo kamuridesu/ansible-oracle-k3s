@@ -1,0 +1,9 @@
+---
+- name: Provision K3s
+  hosts: dev
+  remote_user: vagrant
+  roles:
+    - role: common
+    - role: master
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml

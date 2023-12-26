@@ -7,7 +7,7 @@ if [ ! -f /etc/rancher/k3s/k3s.yaml ]; then
     mkdir -p /home/vagrant/.kube
     cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
 fi
-cowsay K3s is running!
+cowsay "K3s is running!"
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
@@ -39,7 +39,7 @@ if [[ "$(kubectl get pods -n istio-ingress | tail -1 | awk '{print $3}')" != "Ru
     helm install istio-base istio/base -n istio-system
     helm install istiod istio/istiod -n istio-system --wait
     # On step four, from here: https://istio.io/latest/docs/setup/additional-setup/gateway/
-    cowsay C"reating Istio ingress gateway"
+    cowsay "Creating Istio ingress gateway"
     kubectl create namespace istio-ingress
     kubectl label namespace istio-ingress istio-injection=enabled # https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/#automatic-sidecar-injection
     helm install istio-ingressgateway istio/gateway -n istio-ingress
@@ -53,5 +53,3 @@ cowsay "Istio is running!"
 . /vagrant/argocd/argocd.sh
 
 kubectl get nodes -o wide
-
-# bash /vagrant/configs/shell/provision_master.sh

@@ -1,0 +1,26 @@
+- name: Install required packages
+  become: yes
+  ansible.builtin.apt:
+    state: present
+    update_cache: yes
+    name:
+      - vim
+      - curl
+      - ssh
+      - cowsay
+      - git
+      - python3-pip
+
+- name: Install dependencies
+  become: yes
+  pip:
+    state: present
+    name:
+      - pyyaml
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: 'u+x'
+  

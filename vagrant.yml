@@ -5,7 +5,8 @@ MACHINES:
     MEMORY: "4000"
     TYPE: "master"
     IP: 10.0.1.100
-    SCRIPT: master.sh
+    # SCRIPT: master.sh
+    SSH_PUB_KEY_FILE: /home/kamuri/.ssh/id_rsa.pub
 
   # - NAME: "worker01"
   #   CPU: "1"
