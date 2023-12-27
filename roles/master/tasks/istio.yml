@@ -3,7 +3,7 @@
   ansible.builtin.shell: kubectl get pods -n istio-ingress | tail -1 | awk '{print $3}'
   register: istio_status
   changed_when: False
-    
+
 - name: Add Istio repo
   kubernetes.core.helm_repository:
     name: "istio"
