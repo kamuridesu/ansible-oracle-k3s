@@ -17,9 +17,10 @@
     state: present
     name:
       - pyyaml
+      - kubernetes
 
 - name: Install kubectl
   ansible.builtin.get_url:
     url: "https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/amd64/kubectl"
     dest: /usr/local/bin/kubectl
-    mode: 'u+x'
+    mode: 'x'

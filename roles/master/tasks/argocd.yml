@@ -1,0 +1,44 @@
+---
+- name: Check if ArgoCD is running
+  ansible.builtin.shell: kubectl get pods -n argocd | tail -1 | awk '{print $3}'
+  register: argocd_status
+  changed_when: false
+
+- name: Add argocd repo to Helm
+  kubernetes.core.helm_repository:
+    name: argo-cd
+    repo_url: https://argoproj.github.io/argo-helm
+    state: present
+  when: argocd_status.stdout != "Running"
+
+- name: Clone ArgoCD files repository
+  ansible.builtin.git:
+    repo: https://github.com/kamuridesu/argocd-apps-test-helm.git
+    dest: /tmp/argocd-helm
+    clone: yes
+    update: yes
+  when: argocd_status.stdout != "Running"
+
+- name: Update ArgoCD Helm Chart and Install
+  kubernetes.core.helm:
+    dependency_update: yes
+    chart_ref: /tmp/argocd-helm/charts/argocd
+    create_namespace: true
+    namespace: argocd
+    name: argo-cd
+  when: argocd_status.stdout != "Running"
+
+- name: Install root app
+  kubernetes.core.k8s:
+    state: present
+    src: /tmp/argocd-helm/apps/default.yml
+  when: argocd_status.stdout != "Running"
+
+- name: Remove Helm management over ArgoCD
+  kubernetes.core.k8s:
+    state: absent
+    label_selectors:
+      - "owner=helm,name=argo-cd"
+    namespace: argocd
+    kind: secret
+  
