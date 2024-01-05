@@ -1,8 +1,12 @@
 import os
 import pathlib
 from subprocess import PIPE, Popen
+import sys
 
 TARGET_DIR = pathlib.Path.home() / ".config" / "OpenLens" / "kubeconfigs"
+if sys.platform == "win32":
+    TARGET_DIR = pathlib.Path.home() / "AppData" / "Roaming" / "OpenLens" / "kubeconfigs"
+
 TARGET_FILE = TARGET_DIR / "k3s"
 os.makedirs(
     TARGET_DIR,
