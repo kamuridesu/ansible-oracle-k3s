@@ -1,4 +1,15 @@
 ---
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+
+- name: Setup System
+  ansible.builtin.shell: |
+    swapoff -a
+    sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
 - name: Check if k3s config exists
   ansible.builtin.stat:
     path: /etc/rancher/k3s/k3s.yaml
@@ -6,7 +17,7 @@
 
 - name: Install k3s
   ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--flannel-backend=none --cluster-cidr=192.168.0.0/16 --disable-network-policy --disable=traefik --tls-san 10.0.1.100 --advertise-address 10.0.1.100" sh -
+    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--flannel-backend=none --cluster-cidr=192.168.0.0/16 --disable-network-policy --disable=traefik --tls-san 10.0.1.100 --advertise-address 10.0.1.100 --node-external-ip=10.0.1.100" sh -
     mkdir -p /home/vagrant/.kube
     cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
   when: k3s_config.stat.exists == False

@@ -25,7 +25,7 @@ def get_k3s_kubeconfig() -> str:
             (Exception,),
             {
                 "__init__": lambda self, message: super(Exception, self).__init__(message)
-            })(err)
+            })(err if err != b"" else out)
     output = "\n".join(out.decode().splitlines()[1:]).replace("127.0.0.1", "10.0.1.100")
     with open(TARGET_FILE, "w") as f:
         f.write(output)

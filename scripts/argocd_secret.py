@@ -10,7 +10,7 @@ def get_argocd_initial_admin_secret() -> str:
     )
     out, err = p.communicate()
     if p.returncode != 0:
-        raise type("VagrantCommandError", (Exception,), {"__init__": lambda self, message: super(Exception, self).__init__(message)})(err)
+        raise type("VagrantCommandError", (Exception,), {"__init__": lambda self, message: super(Exception, self).__init__(message)})(err if err != b"" else out)
     return b64decode(out.decode().split('\n')[-1].encode()).decode().strip()
 
 

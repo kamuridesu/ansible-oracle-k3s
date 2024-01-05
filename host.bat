@@ -1,4 +1,4 @@
 @echo off
 
-python kubeconfig.py
-python argocd/argocd_secret.py
+python scripts\kubeconfig.py
+python scripts\argocd_secret.py

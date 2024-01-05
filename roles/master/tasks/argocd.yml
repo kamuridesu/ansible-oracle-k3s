@@ -19,11 +19,21 @@
     update: yes
   when: argocd_status.stdout != "Running"
 
+- name: Create istio ingress gateway namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: argocd
+        labels:
+          "istio-injection": enabled
+
 - name: Update ArgoCD Helm Chart and Install
   kubernetes.core.helm:
     dependency_update: yes
     chart_ref: /tmp/argocd-helm/charts/argocd
-    create_namespace: true
     namespace: argocd
     name: argo-cd
   when: argocd_status.stdout != "Running"
