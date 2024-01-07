@@ -5,11 +5,15 @@
   changed_when: False
 
 - name: Install Tigera operator
-  ansible.builtin.command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.4/manifests/tigera-operator.yaml
+  kubernetes.core.k8s:
+    state: present
+    src: https://raw.githubusercontent.com/projectcalico/calico/v3.26.4/manifests/tigera-operator.yaml
   when: calico_status.stdout != "Running"
 
 - name: Install calico
-  ansible.builtin.command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.4/manifests/custom-resources.yaml
+  kubernetes.core.k8s:
+    state: present
+    src: https://github.com/kamuridesu/argocd-apps-test-helm/blob/main/custom-resources/calico.yml
   when: calico_status.stdout != "Running"
 
 - name: Wait for calico to be running
