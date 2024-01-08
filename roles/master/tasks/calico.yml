@@ -13,7 +13,7 @@
 - name: Install calico
   kubernetes.core.k8s:
     state: present
-    src: https://github.com/kamuridesu/argocd-apps-test-helm/blob/main/custom-resources/calico.yml
+    src: https://raw.githubusercontent.com/kamuridesu/argocd-apps-test-helm/main/custom-resources/calico.yml
   when: calico_status.stdout != "Running"
 
 - name: Wait for calico to be running
