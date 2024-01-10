@@ -7,3 +7,9 @@
     - role: master
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: Provision worker
+  hosts: worker-dev
+  remote_user: vagrant
+  roles:
+    - role: common

@@ -20,5 +20,5 @@
   ansible.builtin.shell: kubectl get pods -n calico-apiserver | tail -1 | awk '{print $3}'
   register: calico_status
   until: calico_status.stdout == "Running"
-  retries: 30
+  retries: 100
   delay: 10

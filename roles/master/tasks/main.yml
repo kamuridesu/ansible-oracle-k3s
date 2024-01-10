@@ -17,12 +17,12 @@
 
 - name: Install k3s
   ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--flannel-backend=none --cluster-cidr=192.168.0.0/16 --disable-network-policy --disable=traefik --tls-san 10.0.1.100 --advertise-address 10.0.1.100 --node-external-ip=10.0.1.100" sh -
+    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--disable=traefik --cluster-cidr=192.168.0.0/16 --tls-san "{{ ansible_host }}" --advertise-address "{{ ansible_host }}" --node-external-ip="{{ ansible_host }}"" sh -
     mkdir -p /home/vagrant/.kube
     cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
   when: k3s_config.stat.exists == False
 
-- include_tasks: calico.yml
+# - include_tasks: calico.yml
 - include_tasks: helm.yml
 - include_tasks: istio.yml
 - include_tasks: argocd.yml

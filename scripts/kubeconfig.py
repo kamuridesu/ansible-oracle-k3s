@@ -13,13 +13,12 @@ os.makedirs(
     exist_ok=True
 )
 
-
 def get_k3s_kubeconfig() -> str:
     p = Popen([
-        "vagrant",
         "ssh",
-        "master01",
-        "-c",
+        "-i",
+        "~/.ssh/id_rsa",
+        "vagrant@10.0.1.100",
         r'cat /home/vagrant/.kube/config'
     ], stdin=PIPE, stdout=PIPE)
     out, err = p.communicate()
