@@ -1,15 +1,20 @@
 ---
 - name: Provision K3s
-  hosts: dev
-  remote_user: vagrant
+  hosts: master
+  remote_user: ubuntu
   roles:
-    - role: common
+    # - role: common
     - role: master
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  vars:
+    master_password: {}
 
 - name: Provision worker
-  hosts: worker-dev
-  remote_user: vagrant
+  gather_facts: yes
+  hosts: worker
+  remote_user: ubuntu
   roles:
-    - role: common
+    # - role: common
+    - role: worker
+

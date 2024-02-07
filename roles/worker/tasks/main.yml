@@ -1,11 +1,9 @@
 ---
-- name: Install kubectl
-  ansible.builtin.get_url:
-    url: "https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/amd64/kubectl"
-    dest: /usr/local/bin/kubectl
-    mode: '0755'
+- name: Check password
+  debug:
+    msg: "{{ hostvars['master1']['master_password'] }}"
 
-- name: Setup System
-  ansible.builtin.shell: |
-    swapoff -a
-    sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+- name: Setup K3s Agent
+  ansible.builtin.shell:
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ hostvars['master1']['master_password'] }}" sh -s - --server "https://{{ hostvars['master1']["ansible_host"] }}:6443"
+  

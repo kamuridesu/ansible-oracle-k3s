@@ -23,3 +23,22 @@
     name:
       - pyyaml
       - kubernetes
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/arm64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+
+- name: Setup System
+  become: true
+  ansible.builtin.shell: |
+    swapoff -a
+    sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+    /usr/sbin/netfilter-persistent stop
+    /usr/sbin/netfilter-persistent flush
+    systemctl stop netfilter-persistent.service
+    systemctl disable netfilter-persistent.service
+    echo "SystemMaxUse=100M" >> /etc/systemd/journald.conf
+    echo "SystemMaxFileSize=100M" >> /etc/systemd/journald.conf
+    systemctl restart systemd-journald
