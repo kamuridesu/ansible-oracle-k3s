@@ -51,4 +51,3 @@
       - "owner=helm,name=argo-cd"
     namespace: argocd
     kind: secret
-  

@@ -17,4 +17,3 @@
   roles:
     - role: common
     - role: worker
-

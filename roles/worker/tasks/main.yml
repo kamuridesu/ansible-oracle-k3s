@@ -2,4 +2,3 @@
 - name: Setup K3s Agent
   ansible.builtin.shell:
     curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ hostvars['master1']['master_password'] }}" sh -s - --server "https://{{ hostvars['master1']["ansible_host"] }}:6443"
-  
