@@ -1,0 +1,34 @@
+---
+- name: Create postgres folder
+  become: true
+  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  file:
+    path: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres"
+    state: directory
+
+- name: Get replica private IP
+  delegate_to: 'worker1'
+  ansible.builtin.shell:
+    cmd: hostname -I | cut -d " " -f 1
+  register: replica_ip_cmd
+
+- name: Copy the docker-compose template over
+  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  become: true
+  vars:
+    replica_ip: "{{ replica_ip_cmd.stdout }}"
+  ansible.builtin.template:
+    src: files/postgres/primary/docker-compose.yml.j2
+    dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/docker-compose.yml"
+
+- name: Copy the sql file
+  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  become: true
+  ansible.builtin.copy:
+    src: files/postgres/primary/00_init.sql
+    dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/00_init.sql"
+
+- name: Deploy container
+  community.docker.docker_compose_v2:
+    project_src: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/"
+    state: present

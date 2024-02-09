@@ -21,6 +21,7 @@
     master_password: "{{ password_output.stdout }}"
   run_once: yes
 
-- include_tasks: helm.yml
-- include_tasks: istio.yml
-- include_tasks: argocd.yml
+# - include_tasks: helm.yml
+# - include_tasks: istio.yml
+# - include_tasks: argocd.yml
+- include_tasks: postgres.yml

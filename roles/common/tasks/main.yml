@@ -15,6 +15,7 @@
       - ca-certificates
       - software-properties-common
       - gnupg
+      - docker.io
 
 - name: Install dependencies
   become: yes
@@ -23,6 +24,8 @@
     name:
       - pyyaml
       - kubernetes
+      - docker
+      - docker-compose
 
 - name: Install kubectl
   ansible.builtin.get_url:
@@ -42,3 +45,6 @@
     echo "SystemMaxUse=100M" >> /etc/systemd/journald.conf
     echo "SystemMaxFileSize=100M" >> /etc/systemd/journald.conf
     systemctl restart systemd-journald
+
+- name: Setup docker compose
+  ansible.builtin.shell: curl https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh | sh -

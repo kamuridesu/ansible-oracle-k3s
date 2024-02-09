@@ -1,0 +1,19 @@
+---
+- name: Create postgres folder
+  become: true
+  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  file:
+    path: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres"
+    state: directory
+
+- name: Copy the docker-compose over
+  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  become: true
+  ansible.builtin.copy:
+    src: files/postgres/replica/docker-compose.yml
+    dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/docker-compose.yml"
+
+- name: Deploy container
+  community.docker.docker_compose_v2:
+    project_src: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/"
+    state: present
