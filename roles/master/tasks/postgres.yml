@@ -28,6 +28,10 @@
     src: files/postgres/primary/00_init.sql
     dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/00_init.sql"
 
+- name: Restart docker service
+  ansible.builtin.shell:
+    cmd: systemctl restart docker
+
 - name: Deploy container
   community.docker.docker_compose_v2:
     project_src: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/"

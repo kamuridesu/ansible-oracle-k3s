@@ -13,6 +13,10 @@
     src: files/postgres/replica/docker-compose.yml
     dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/docker-compose.yml"
 
+- name: Restart docker service
+  ansible.builtin.shell:
+    cmd: systemctl restart docker
+
 - name: Deploy container
   community.docker.docker_compose_v2:
     project_src: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/"
