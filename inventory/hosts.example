@@ -2,3 +2,5 @@
 worker1 ansible_host=
 [master]
 master1 ansible_host=
+[lb]
+lb1 ansible_host=

@@ -1,0 +1,46 @@
+---
+- name: Install required packages
+  become: yes
+  ansible.builtin.apt:
+    state: present
+    update_cache: yes
+    name:
+      - ssh
+      - cowsay
+      - python3-pip
+      - htop
+      - apt-transport-https
+      - ca-certificates
+      - software-properties-common
+      - gnupg
+      - docker.io
+      - haproxy
+      - certbot
+      - net-tools
+      - git
+      - curl
+      - vim
+
+- name: Install dependencies
+  become: yes
+  pip:
+    state: present
+    name:
+      - pyyaml
+      - docker
+      - docker-compose
+
+- name: Setup IPTables
+  ansible.builtin.iptables:
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    destination_ports:
+      - 81
+      - 80
+      - 443
+    state: present
+
+- name: Make iptables rules permanent
+  ansible.builtin.shell:
+    cmd: netfilter-persistent save
