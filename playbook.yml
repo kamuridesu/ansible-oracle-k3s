@@ -1,22 +1,22 @@
-# ---
-# - name: Provision K3s
-#   hosts: master
-#   remote_user: ubuntu
-#   roles:
-#     - role: common
-#     - role: master
-#   environment:
-#     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-#   vars:
-#     master_password: {}
+---
+- name: Provision K3s
+  hosts: master
+  remote_user: ubuntu
+  roles:
+    # - role: common
+    - role: master
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  vars:
+    master_password: {}
 
-# - name: Provision worker
-#   gather_facts: yes
-#   hosts: worker
-#   remote_user: ubuntu
-#   roles:
-#     - role: common
-#     - role: worker
+- name: Provision worker
+  gather_facts: yes
+  hosts: worker
+  remote_user: ubuntu
+  roles:
+    # - role: common
+    - role: worker
 
 - name: Provision Load Balancer
   gather_facts: yes
@@ -24,5 +24,6 @@
   remote_user: ubuntu
   roles:
     - role: lb
+    - role: proxy
   tags:
     load-balancer

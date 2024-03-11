@@ -39,6 +39,7 @@
       - 81
       - 80
       - 443
+      - 1080
     state: present
 
 - name: Make iptables rules permanent

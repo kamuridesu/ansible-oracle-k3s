@@ -1,7 +1,18 @@
 ---
+
+- name: Get primary postgres private IP
+  delegate_to: 'master1'
+  ansible.builtin.shell:
+    cmd: hostname -I | cut -d " " -f 1
+  register: primary_ip_cmd
+
+- name: test
+  ansible.builtin.debug:
+    msg: curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ hostvars['master1']['master_password'] }}" sh -s - --server "https://{{ primary_ip_cmd.stdout }}:6443"
+
 - name: Setup K3s Agent
   ansible.builtin.shell:
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ hostvars['master1']['master_password'] }}" sh -s - --server "https://{{ hostvars['master1']["ansible_host"] }}:6443"
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ hostvars['master1']['master_password'] }}" sh -s - --server "https://{{ primary_ip_cmd.stdout }}:6443"
 
 - name: Check if cp is added to hosts file
   ansible.builtin.shell:
@@ -10,12 +21,6 @@
   register: grep_output
   ignore_errors: yes
   changed_when: false
-
-- name: Get primary postgres private IP
-  delegate_to: 'master1'
-  ansible.builtin.shell:
-    cmd: hostname -I | cut -d " " -f 1
-  register: primary_ip_cmd
 
 - name: Setup hosts file
   ansible.builtin.shell: echo "{{ primary_ip_cmd.stdout }} k3s-cp k3s-cp" >> /etc/hosts

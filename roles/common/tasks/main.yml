@@ -15,7 +15,6 @@
       - ca-certificates
       - software-properties-common
       - gnupg
-      - docker.io
 
 - name: Install dependencies
   become: yes
@@ -38,13 +37,11 @@
   ansible.builtin.shell: |
     swapoff -a
     sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+    echo "SystemMaxUse=100M" >> /etc/systemd/journald.conf
+    echo "SystemMaxFileSize=100M" >> /etc/systemd/journald.conf
     /usr/sbin/netfilter-persistent stop
     /usr/sbin/netfilter-persistent flush
     systemctl stop netfilter-persistent.service
     systemctl disable netfilter-persistent.service
-    echo "SystemMaxUse=100M" >> /etc/systemd/journald.conf
-    echo "SystemMaxFileSize=100M" >> /etc/systemd/journald.conf
     systemctl restart systemd-journald
 
-- name: Setup docker compose
-  ansible.builtin.shell: curl https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh | sh -

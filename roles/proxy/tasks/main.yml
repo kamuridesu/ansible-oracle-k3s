@@ -1,0 +1,32 @@
+---
+- name: Install Dante
+  ansible.builtin.apt:
+    name:
+      - dante-server
+    update_cache: yes
+    state: present
+
+- name: Remove config
+  ansible.builtin.file:
+    path: /etc/danted.conf
+    state: absent
+
+- name: Copy new config
+  ansible.builtin.copy:
+    src: files/dante/danted.conf
+    dest: /etc/danted.conf
+
+- set_fact:  DANTE_USER="{{ lookup('env', 'DANTE_USER') }}"
+- set_fact:  DANTE_PASSWORD="{{ lookup('env', 'DANTE_PASSWORD') }}"
+
+- name: Create user
+  ansible.builtin.user:
+    name: "{{ DANTE_USER }}"
+    password: "{{ DANTE_PASSWORD | password_hash('sha512') }}"
+    shell: /bin/false
+    system: yes
+    state: present
+
+- name: Restart Dante
+  ansible.builtin.shell:
+    cmd: sudo systemctl restart danted

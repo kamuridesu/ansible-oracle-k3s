@@ -1,4 +1,15 @@
 ---
+- name: Install required packages
+  become: yes
+  ansible.builtin.apt:
+    state: present
+    update_cache: yes
+    name:
+      - docker.io
+
+- name: Setup docker compose
+  ansible.builtin.shell: curl https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh | sh -
+
 - name: Create postgres folder
   become: true
   become_user: "{{ ansible_facts.env.SUDO_USER }}"
