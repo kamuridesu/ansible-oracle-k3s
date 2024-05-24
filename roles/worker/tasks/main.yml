@@ -11,6 +11,7 @@
     msg: curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ hostvars['master1']['master_password'] }}" sh -s - --server "https://{{ primary_ip_cmd.stdout }}:6443"
 
 - name: Setup K3s Agent
+  become: yes
   ansible.builtin.shell:
     curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ hostvars['master1']['master_password'] }}" sh -s - --server "https://{{ primary_ip_cmd.stdout }}:6443"
 
