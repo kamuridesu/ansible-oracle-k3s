@@ -1,3 +1,3 @@
 {
-    "ansible.python.interpreterPath": "c:\\Users\\kamuri\\scoop\\apps\\python\\current\\python.exe"
+    "ansible.python.interpreterPath": "/home/kamuri/Documents/Personal/ansible-oracle-k3s/.venv/bin/python"
 }

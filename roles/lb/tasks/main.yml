@@ -1,9 +1,9 @@
 ---
 - name: Install required packages
-  become: yes
+  become: true
   ansible.builtin.apt:
     state: present
-    update_cache: yes
+    update_cache: true
     name:
       - ssh
       - cowsay
@@ -23,7 +23,7 @@
       - netfilter-persistent
 
 - name: Install dependencies
-  become: yes
+  become: true
   ansible.builtin.pip:
     state: present
     name:
@@ -32,8 +32,8 @@
       - docker-compose
 
 - name: Setup IPTables
-  become: yes
-  community.general.iptables:
+  become: true
+  ansible.builtin.iptables:
     chain: INPUT
     jump: ACCEPT
     protocol: tcp
@@ -44,12 +44,14 @@
     state: present
 
 - name: Make iptables rules permanent
-  become: yes
-  ansible.builtin.shell:
+  become: true
+  ansible.builtin.command:
     cmd: netfilter-persistent save
+  when: iptables_rules_changed is defined and iptables_rules_changed
+  changed_when: iptables_rules_changed is defined and iptables_rules_changed
 
 - name: Restart netfilter-persistent service
-  become: yes
+  become: true
   ansible.builtin.service:
     name: netfilter-persistent
     state: restarted

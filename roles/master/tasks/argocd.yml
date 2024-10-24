@@ -7,7 +7,7 @@
   register: argocd_pods
 
 - name: Set ArgoCD status
-  set_fact:
+  ansible.builtin.set_fact:
     argocd_status: "{{ argocd_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length > 0 }}"
 
 - name: Add argocd repo to Helm
@@ -21,11 +21,12 @@
   ansible.builtin.git:
     repo: https://github.com/kamuridesu/argocd-apps-test-helm.git
     dest: /tmp/argocd-helm
-    clone: yes
-    update: yes
+    clone: true
+    update: true
+    version: main
   when: not argocd_status
 
-- name: Create istio ingress gateway namespace
+- name: Create namespace
   kubernetes.core.k8s:
     state: present
     definition:
@@ -36,7 +37,7 @@
 
 - name: Update ArgoCD Helm Chart and Install
   kubernetes.core.helm:
-    dependency_update: yes
+    dependency_update: true
     chart_ref: /tmp/argocd-helm/charts/argocd
     namespace: argocd
     name: argo-cd

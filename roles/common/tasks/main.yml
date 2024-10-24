@@ -1,8 +1,8 @@
 - name: Install required packages
-  become: yes
+  become: true
   ansible.builtin.apt:
     state: present
-    update_cache: yes
+    update_cache: true
     name:
       - vim
       - curl
@@ -17,7 +17,7 @@
       - gnupg
 
 - name: Install Python dependencies
-  become: yes
+  become: true
   ansible.builtin.pip:
     state: present
     name:
@@ -27,6 +27,7 @@
       - docker-compose
 
 - name: Download kubectl
+  become: true
   ansible.builtin.get_url:
     url: "https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/arm64/kubectl"
     dest: /usr/local/bin/kubectl
@@ -37,13 +38,29 @@
   ansible.builtin.shell: |
     swapoff -a
     sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+  args:
+    creates: /etc/fstab.swapoff
+
+- name: Configure systemd journal
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: '^#?Storage='
+    line: 'Storage=persistent'
+    state: present
+
+- name: Ensure /etc/systemd/journald.conf exists with correct permissions
+  become: true
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf
+    state: touch
+    mode: '0644'
 
 - name: Configure systemd journal
   become: true
   ansible.builtin.lineinfile:
     path: /etc/systemd/journald.conf
     line: "{{ item }}"
-    create: yes
   loop:
     - "SystemMaxUse=100M"
     - "SystemMaxFileSize=100M"
@@ -53,7 +70,7 @@
   ansible.builtin.systemd:
     name: netfilter-persistent
     state: stopped
-    enabled: no
+    enabled: false
 
 - name: Restart systemd-journald
   become: true

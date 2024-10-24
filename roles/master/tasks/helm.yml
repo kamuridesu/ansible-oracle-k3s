@@ -2,7 +2,7 @@
 - name: Check if helm exists
   ansible.builtin.command:
     cmd: which helm
-  changed_when: False
+  changed_when: false
   register: helm_status
   failed_when: helm_status.rc != 0 and helm_status.rc != 1
 
@@ -14,5 +14,7 @@
   when: helm_status.rc != 0
 
 - name: Install helm
-  ansible.builtin.command: /tmp/get_helm.sh
+  ansible.builtin.command:
+    cmd: /tmp/get_helm.sh
+    creates: /usr/local/bin/helm
   when: helm_status.rc != 0

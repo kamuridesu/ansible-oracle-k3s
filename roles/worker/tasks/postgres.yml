@@ -1,14 +1,21 @@
 ---
 - name: Install required packages
-  become: yes
+  become: true
   ansible.builtin.apt:
     state: present
-    update_cache: yes
+    update_cache: true
     name: docker.io
 
-- name: Setup docker compose
-  ansible.builtin.shell:
-    cmd: curl https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh | sh
+- name: Download docker-compose script
+  ansible.builtin.get_url:
+    url: https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh
+    dest: /tmp/docker-compose.sh
+    mode: '0755'
+
+- name: Run docker-compose script
+  ansible.builtin.command: /tmp/docker-compose.sh
+  args:
+    creates: /usr/local/bin/docker-compose
 
 - name: Create postgres folder
   become: true
@@ -16,6 +23,7 @@
   ansible.builtin.file:
     path: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres"
     state: directory
+    mode: '0755'
 
 - name: Copy the docker-compose over
   become: true
@@ -23,6 +31,7 @@
   ansible.builtin.copy:
     src: files/postgres/replica/docker-compose.yml
     dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/docker-compose.yml"
+    mode: '0644'
 
 - name: Restart docker service
   ansible.builtin.systemd:
