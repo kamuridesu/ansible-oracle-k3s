@@ -5,18 +5,19 @@
   register: k3s_config
 
 - name: Get private IP
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: hostname -I | cut -d " " -f 1
   register: primary_ip_cmd
 
 - name: Install k3s
   become: yes
   ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--disable=traefik --cluster-cidr=192.168.0.0/16 --tls-san "{{ primary_ip_cmd.stdout }}" --tls-san "{{ ansible_host }}" --advertise-address "{{ primary_ip_cmd.stdout }}" --node-external-ip="{{ ansible_host }}"" sh -
-  when: k3s_config.stat.exists == False
+    curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--disable=traefik --cluster-cidr=192.168.0.0/16 --tls-san {{ primary_ip_cmd.stdout }} --tls-san {{ ansible_host }} --advertise-address {{ primary_ip_cmd.stdout }} --node-external-ip={{ ansible_host }}" sh -
+  when: not k3s_config.stat.exists
 
 - name: Get password on master
-  ansible.builtin.shell: cat /var/lib/rancher/k3s/server/node-token
+  become: yes
+  ansible.builtin.command: cat /var/lib/rancher/k3s/server/node-token
   register: password_output
   run_once: yes
 

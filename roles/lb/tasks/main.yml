@@ -20,10 +20,11 @@
       - git
       - curl
       - vim
+      - netfilter-persistent
 
 - name: Install dependencies
   become: yes
-  pip:
+  ansible.builtin.pip:
     state: present
     name:
       - pyyaml
@@ -31,17 +32,24 @@
       - docker-compose
 
 - name: Setup IPTables
-  ansible.builtin.iptables:
+  become: yes
+  community.general.iptables:
     chain: INPUT
     jump: ACCEPT
     protocol: tcp
-    destination_ports:
+    destination_port:
       - 81
       - 80
       - 443
-      - 1080
     state: present
 
 - name: Make iptables rules permanent
+  become: yes
   ansible.builtin.shell:
     cmd: netfilter-persistent save
+
+- name: Restart netfilter-persistent service
+  become: yes
+  ansible.builtin.service:
+    name: netfilter-persistent
+    state: restarted

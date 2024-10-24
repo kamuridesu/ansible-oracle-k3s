@@ -4,16 +4,16 @@
   ansible.builtin.apt:
     state: present
     update_cache: yes
-    name:
-      - docker.io
+    name: docker.io
 
 - name: Setup docker compose
-  ansible.builtin.shell: curl https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh | sh -
+  ansible.builtin.shell:
+    cmd: curl https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh | sh
 
 - name: Create postgres folder
   become: true
   become_user: "{{ ansible_facts.env.SUDO_USER }}"
-  file:
+  ansible.builtin.file:
     path: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres"
     state: directory
 
@@ -23,11 +23,13 @@
     cmd: hostname -I | cut -d " " -f 1
   register: replica_ip_cmd
 
-- set_fact:  POSTGRES_PASSWORD="{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+- name: Set POSTGRES_PASSWORD fact
+  set_fact:
+    POSTGRES_PASSWORD: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
 
 - name: Copy the docker-compose template over
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
   become: true
+  become_user: "{{ ansible_facts.env.SUDO_USER }}"
   vars:
     replica_ip: "{{ replica_ip_cmd.stdout }}"
   ansible.builtin.template:
@@ -35,8 +37,8 @@
     dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/docker-compose.yml"
 
 - name: Copy the sql file
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
   become: true
+  become_user: "{{ ansible_facts.env.SUDO_USER }}"
   ansible.builtin.copy:
     src: files/postgres/primary/00_init.sql
     dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/00_init.sql"
