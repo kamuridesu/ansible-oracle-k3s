@@ -9,7 +9,6 @@
     state: present
 
 - name: Restart server
-  async: 700
   become: true
   ansible.builtin.reboot:
     reboot_timeout: 600
