@@ -28,6 +28,12 @@
 - name: Setup docker compose
   become: true
   ansible.builtin.command:
+    cmd: sudo /bin/bash -c 'set -o pipefail && sh /tmp/docker-compose.sh'
+  args:
+    creates: /usr/local/bin/docker-compose
+
+- name: Setup docker compose
+  ansible.builtin.command:
     cmd: /bin/bash -c 'set -o pipefail && sh /tmp/docker-compose.sh'
   args:
     creates: /usr/local/bin/docker-compose
