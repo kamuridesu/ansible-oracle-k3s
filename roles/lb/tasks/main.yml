@@ -1,9 +1,9 @@
 ---
 - name: Install required packages
-  become: yes
+  become: true
   ansible.builtin.apt:
     state: present
-    update_cache: yes
+    update_cache: true
     name:
       - ssh
       - cowsay
@@ -20,28 +20,48 @@
       - git
       - curl
       - vim
+      - netfilter-persistent
 
 - name: Install dependencies
-  become: yes
-  pip:
+  become: true
+  ansible.builtin.pip:
     state: present
     name:
       - pyyaml
       - docker
       - docker-compose
 
+
 - name: Setup IPTables
+  become: true
   ansible.builtin.iptables:
     chain: INPUT
     jump: ACCEPT
     protocol: tcp
-    destination_ports:
-      - 81
-      - 80
-      - 443
-      - 1080
+    ctstate:
+      - NEW
+    destination_port: "{{ item }}"
     state: present
+    rule_num: 6
+    action: insert
+  with_items:
+    - 80
+    - 81
+    - 443
 
 - name: Make iptables rules permanent
-  ansible.builtin.shell:
+  become: true
+  ansible.builtin.command:
     cmd: netfilter-persistent save
+  when: iptables_rules_changed is defined and iptables_rules_changed
+  changed_when: iptables_rules_changed is defined and iptables_rules_changed
+
+- name: Restart netfilter-persistent service
+  become: true
+  ansible.builtin.service:
+    name: netfilter-persistent
+    state: restarted
+
+- name: Setup certificates
+  ansible.builtin.include_tasks:
+    file: tasks/certbot.yml

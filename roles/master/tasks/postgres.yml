@@ -1,51 +1,91 @@
 ---
+
+- name: Set POSTGRES_PASSWORD fact
+  ansible.builtin.set_fact:
+    postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+
 - name: Install required packages
-  become: yes
+  become: true
   ansible.builtin.apt:
     state: present
-    update_cache: yes
-    name:
-      - docker.io
+    update_cache: true
+    name: docker.io
+
+- name: Create group docker
+  become: true
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: Add user to docker group
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_facts.env.USER }}"
+    groups: docker
+    append: true
+
+- name: Download docker-compose setup script
+  ansible.builtin.get_url:
+    url: https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh
+    dest: /tmp/docker-compose.sh
+    mode: '0755'
 
 - name: Setup docker compose
-  ansible.builtin.shell: curl https://gist.githubusercontent.com/kamuridesu/d8be27b388f54c221a2889e7a94943c3/raw/a46a54047488d7f571459784f4ea5c707f050c68/docker-compose.sh | sh -
+  become: true
+  ansible.builtin.command:
+    cmd: /bin/bash -c 'set -o pipefail && sh /tmp/docker-compose.sh'
+  args:
+    creates: /usr/local/bin/docker-compose
 
 - name: Create postgres folder
   become: true
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
-  file:
-    path: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres"
+  become_user: "{{ ansible_facts.env.USER }}"
+  ansible.builtin.file:
+    path: "/home/{{ ansible_facts.env.USER }}/postgres"
     state: directory
+    mode: '0755'
 
 - name: Get replica private IP
   delegate_to: 'worker1'
-  ansible.builtin.shell:
-    cmd: hostname -I | cut -d " " -f 1
+  ansible.builtin.command:
+    cmd: /bin/bash -c 'set -o pipefail && hostname -I | cut -d " " -f 1'
   register: replica_ip_cmd
+  args:
+    creates: /tmp/replica_ip.txt
 
-- set_fact:  POSTGRES_PASSWORD="{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+- name: Notify handler to save replica IP
+  delegate_to: 'worker1'
+  ansible.builtin.command:
+    cmd: /bin/bash -c 'hostname -I | cut -d " " -f 1'
+  register: replica_ip_cmd
+  changed_when: false
+  notify: Save replica IP to file
 
 - name: Copy the docker-compose template over
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
   become: true
+  become_user: "{{ ansible_facts.env.USER }}"
   vars:
     replica_ip: "{{ replica_ip_cmd.stdout }}"
   ansible.builtin.template:
     src: files/postgres/primary/docker-compose.yml.j2
-    dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/docker-compose.yml"
+    dest: "/home/{{ ansible_facts.env.USER }}/postgres/docker-compose.yml"
+    mode: '0644'
 
 - name: Copy the sql file
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
   become: true
+  become_user: "{{ ansible_facts.env.USER }}"
   ansible.builtin.copy:
     src: files/postgres/primary/00_init.sql
-    dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/00_init.sql"
+    dest: "/home/{{ ansible_facts.env.USER }}/postgres/00_init.sql"
+    mode: '0644'
 
-- name: Restart docker service
-  ansible.builtin.shell:
-    cmd: systemctl restart docker
+# - name: Restart docker service
+#   ansible.builtin.systemd:
+#     name: docker
+#     state: restarted
 
 - name: Deploy container
+  become: true
   community.docker.docker_compose_v2:
-    project_src: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/"
+    project_src: "/home/{{ ansible_facts.env.USER }}/postgres/"
     state: present

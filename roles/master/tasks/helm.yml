@@ -1,14 +1,20 @@
 ---
 - name: Check if helm exists
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: which helm
-  changed_when: False
+  changed_when: false
   register: helm_status
   failed_when: helm_status.rc != 0 and helm_status.rc != 1
 
+- name: Download Helm install script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get_helm.sh
+    mode: '0700'
+  when: helm_status.rc != 0
+
 - name: Install helm
-  ansible.builtin.shell: |
-    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-    chmod 700 get_helm.sh
-    ./get_helm.sh
+  ansible.builtin.command:
+    cmd: /tmp/get_helm.sh
+    creates: /usr/local/bin/helm
   when: helm_status.rc != 0

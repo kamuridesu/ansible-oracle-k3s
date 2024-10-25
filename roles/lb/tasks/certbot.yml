@@ -1,0 +1,36 @@
+---
+- name: Stop HAProxy
+  become: true
+  ansible.builtin.systemd:
+    name: haproxy
+    state: stopped
+
+- name: Get SSL certificates
+  become: true
+  retries: 3
+  ansible.builtin.command:
+    cmd: >
+      certbot certonly --standalone -d kamuridesu.com -d count.kamuridesu.com -d api.kamuridesu.com -d inv.kamuridesu.com -d argo.kamuridesu.com -d www.kamuridesu.com -d notes.kamuridesu.com -d keycloak.kamuridesu.com --non-interactive --agree-tos --email myk.gata14@gmail.com
+    creates: /etc/letsencrypt/live/kamuridesu.com/fullchain.pem
+
+- name: Create SSL directory
+  become: true
+  ansible.builtin.file:
+    path: /etc/ssl/com.kamuridesu/
+    state: directory
+    mode: '0755'
+
+- name: Concatenate SSL certificates
+  become: true
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: >
+      set -o pipefail && cat /etc/letsencrypt/live/kamuridesu.com/fullchain.pem /etc/letsencrypt/live/kamuridesu.com/privkey.pem | tee /etc/ssl/com.kamuridesu/com.kamuridesu.pem
+    creates: /etc/ssl/com.kamuridesu/com.kamuridesu.pem
+
+- name: Enable HAProxy
+  become: true
+  ansible.builtin.systemd:
+    name: haproxy
+    enabled: true
+    state: started
