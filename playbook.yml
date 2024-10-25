@@ -4,8 +4,8 @@
   remote_user: ubuntu
   gather_facts: true
   roles:
-    # - role: common
-    # - role: master
+    - role: common
+    - role: master
     - role: update
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
@@ -15,8 +15,8 @@
   hosts: worker
   remote_user: ubuntu
   roles:
-    # - role: common
-    # - role: worker
+    - role: common
+    - role: worker
     - role: update
 
 - name: Provision Load Balancer
@@ -24,7 +24,7 @@
   hosts: lb
   remote_user: ubuntu
   roles:
-    # - role: lb
+    - role: lb
     - role: update
   tags:
     load-balancer
