@@ -2,36 +2,44 @@
 
 - name: Get primary postgres private IP
   delegate_to: 'master1'
-  ansible.builtin.command:
-    cmd: hostname -I | cut -d " " -f 1
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail;
+      hostname -I | cut -d " " -f 1
+    executable: /bin/bash
   register: primary_ip_cmd
   changed_when: false
 
-- name: Debug primary IP
-  ansible.builtin.debug:
-    msg: "Primary IP: {{ primary_ip_cmd.stdout }}"
-
-- name: Setup K3s Agent
+- name: Get /var/lib/rancher/k3s/server/node-token content  on master
+  delegate_to: 'master1'
   become: true
-  ansible.builtin.shell:
-    cmd: >
-      set -o pipefail &&
-      curl -sfL https://get.k3s.io |
-      INSTALL_K3S_EXEC="agent"
-      K3S_TOKEN="{{ hostvars['master1']['master_password'] }}"
-      sh -s - --server "https://{{ primary_ip_cmd.stdout }}:6443"
-    creates: /etc/systemd/system/k3s-agent.service
-    executable: /bin/bash
-  when: not ansible_facts['ansible_local']['k3s_agent_installed'] | default(false)
+  become_user: root
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: password_output
+
+- name: Set password as fact
+  delegate_to: 'master1'
+  ansible.builtin.set_fact:
+    master_password: "{{ password_output.content | b64decode | trim }}"
 
 - name: Check if cp is added to hosts file
+  become: true
   ansible.builtin.lineinfile:
     path: /etc/hosts
     line: "{{ primary_ip_cmd.stdout }} k3s-cp k3s-cp"
     state: present
   register: grep_output
-  ignore_errors: true
   changed_when: false
+
+- name: Setup K3s Agent
+  become: true
+  ansible.builtin.shell:
+    cmd: >
+      set -o pipefail && curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ master_password }}" sh -s - --server "https://{{ primary_ip_cmd.stdout }}:6443"
+    executable: /bin/bash
+    creates: /etc/systemd/system/k3s-agent.service
+  when: not ansible_facts['ansible_local']['k3s_agent_installed'] | default(false)
 
 - name: Setup hosts file
   ansible.builtin.lineinfile:

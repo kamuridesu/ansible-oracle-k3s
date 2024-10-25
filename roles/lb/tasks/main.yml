@@ -31,17 +31,23 @@
       - docker
       - docker-compose
 
+
 - name: Setup IPTables
   become: true
   ansible.builtin.iptables:
     chain: INPUT
     jump: ACCEPT
     protocol: tcp
-    destination_port:
-      - 81
-      - 80
-      - 443
+    ctstate:
+      - NEW
+    destination_port: "{{ item }}"
     state: present
+    rule_num: 6
+    action: insert
+  with_items:
+    - 80
+    - 81
+    - 443
 
 - name: Make iptables rules permanent
   become: true
@@ -55,3 +61,7 @@
   ansible.builtin.service:
     name: netfilter-persistent
     state: restarted
+
+- name: Setup certificates
+  ansible.builtin.include_tasks:
+    file: tasks/certbot.yml

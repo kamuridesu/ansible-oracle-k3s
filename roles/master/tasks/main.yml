@@ -24,29 +24,11 @@
   args:
     creates: /etc/rancher/k3s/k3s.yaml
 
-- name: Get password on master
-  become: true
-  ansible.builtin.command:
-    cmd: cat /var/lib/rancher/k3s/server/node-token
-    creates: /var/lib/rancher/k3s/server/node-token
-  register: password_output
-  run_once: true
+- name: Include Helm tasks
+  ansible.builtin.include_tasks: helm.yml
 
-- name: Set password as fact
-  ansible.builtin.set_fact:
-    master_password: "{{ password_output.stdout }}"
-  run_once: true
-
-# - name: Include Helm tasks
-#   ansible.builtin.include_tasks: helm.yml
-
-# - name: Include ArgoCD tasks
-#   ansible.builtin.include_tasks: argocd.yml
-
-- name: Debug
-  become: true
-  ansible.builtin.debug:
-    msg: "{{ ansible_facts.env.SUDO_USER }}"
+- name: Include ArgoCD tasks
+  ansible.builtin.include_tasks: argocd.yml
 
 - name: Include Postgres tasks
   ansible.builtin.include_tasks: postgres.yml

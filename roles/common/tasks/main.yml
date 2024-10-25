@@ -72,6 +72,11 @@
     state: stopped
     enabled: false
 
+- name: Flush iptables
+  become: true
+  ansible.builtin.iptables:
+    flush: true
+
 - name: Restart systemd-journald
   become: true
   ansible.builtin.systemd:

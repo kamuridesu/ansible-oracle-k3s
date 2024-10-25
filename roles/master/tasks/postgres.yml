@@ -1,10 +1,28 @@
 ---
+
+- name: Set POSTGRES_PASSWORD fact
+  ansible.builtin.set_fact:
+    postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+
 - name: Install required packages
   become: true
   ansible.builtin.apt:
     state: present
     update_cache: true
     name: docker.io
+
+- name: Create group docker
+  become: true
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: Add user to docker group
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_facts.env.USER }}"
+    groups: docker
+    append: true
 
 - name: Download docker-compose setup script
   ansible.builtin.get_url:
@@ -13,6 +31,7 @@
     mode: '0755'
 
 - name: Setup docker compose
+  become: true
   ansible.builtin.command:
     cmd: /bin/bash -c 'set -o pipefail && sh /tmp/docker-compose.sh'
   args:
@@ -20,9 +39,9 @@
 
 - name: Create postgres folder
   become: true
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  become_user: "{{ ansible_facts.env.USER }}"
   ansible.builtin.file:
-    path: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres"
+    path: "/home/{{ ansible_facts.env.USER }}/postgres"
     state: directory
     mode: '0755'
 
@@ -42,34 +61,31 @@
   changed_when: false
   notify: Save replica IP to file
 
-- name: Set POSTGRES_PASSWORD fact
-  ansible.builtin.set_fact:
-    postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
-
 - name: Copy the docker-compose template over
   become: true
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  become_user: "{{ ansible_facts.env.USER }}"
   vars:
     replica_ip: "{{ replica_ip_cmd.stdout }}"
   ansible.builtin.template:
     src: files/postgres/primary/docker-compose.yml.j2
-    dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/docker-compose.yml"
+    dest: "/home/{{ ansible_facts.env.USER }}/postgres/docker-compose.yml"
     mode: '0644'
 
 - name: Copy the sql file
   become: true
-  become_user: "{{ ansible_facts.env.SUDO_USER }}"
+  become_user: "{{ ansible_facts.env.USER }}"
   ansible.builtin.copy:
     src: files/postgres/primary/00_init.sql
-    dest: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/00_init.sql"
+    dest: "/home/{{ ansible_facts.env.USER }}/postgres/00_init.sql"
     mode: '0644'
 
-- name: Restart docker service
-  ansible.builtin.systemd:
-    name: docker
-    state: restarted
+# - name: Restart docker service
+#   ansible.builtin.systemd:
+#     name: docker
+#     state: restarted
 
 - name: Deploy container
+  become: true
   community.docker.docker_compose_v2:
-    project_src: "/home/{{ ansible_facts.env.SUDO_USER }}/postgres/"
+    project_src: "/home/{{ ansible_facts.env.USER }}/postgres/"
     state: present

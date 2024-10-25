@@ -1,0 +1,16 @@
+---
+- name: Update packages
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+    autoremove: true
+    autoclean: true
+    state: present
+
+- name: Restart server
+  async: 700
+  become: true
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+  failed_when: false
