@@ -26,11 +26,10 @@
   become: true
   ansible.builtin.pip:
     state: present
+    break_system_packages: true
     name:
       - pyyaml
       - docker
-      - docker-compose
-
 
 - name: Setup IPTables
   become: true
@@ -38,11 +37,9 @@
     chain: INPUT
     jump: ACCEPT
     protocol: tcp
-    ctstate:
-      - NEW
     destination_port: "{{ item }}"
     state: present
-    rule_num: 6
+    rule_num: 1
     action: insert
   with_items:
     - 80

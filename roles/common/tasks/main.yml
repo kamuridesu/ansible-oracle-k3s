@@ -20,11 +20,11 @@
   become: true
   ansible.builtin.pip:
     state: present
+    break_system_packages: true
     name:
       - pyyaml
       - kubernetes
       - docker
-      - docker-compose
 
 - name: Download kubectl
   become: true
