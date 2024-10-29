@@ -15,6 +15,10 @@
   ansible.builtin.set_fact:
     reversed_domain: "{{ domain.split('.') | reverse | join('.') }}"
 
+- name: Get user email
+  ansible.builtin.set_fact:
+    email: "{{ user_email }}"
+
 - name: Stop HAProxy
   become: true
   ansible.builtin.systemd:
@@ -26,7 +30,7 @@
   retries: 3
   ansible.builtin.command:
     cmd: >
-      certbot certonly --standalone {{ certbot_domains }} --non-interactive --agree-tos --email
+      certbot certonly --standalone {{ certbot_domains }} --non-interactive --agree-tos --email "{{ user_email }}"
     creates: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
 
 - name: Create SSL directory
