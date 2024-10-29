@@ -45,6 +45,7 @@
     - 80
     - 81
     - 443
+    - 1080
 
 - name: Make iptables rules permanent
   become: true
