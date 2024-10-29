@@ -39,7 +39,7 @@
     protocol: tcp
     destination_port: "{{ item }}"
     state: present
-    rule_num: 1
+    rule_num: 6
     action: insert
   with_items:
     - 80

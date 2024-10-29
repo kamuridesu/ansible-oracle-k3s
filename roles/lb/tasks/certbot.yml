@@ -1,4 +1,20 @@
 ---
+- name: Build domain list from extravars
+  ansible.builtin.set_fact:
+    domain_list: "{{ domains | split(',') }}"
+
+- name: Get the first domain
+  ansible.builtin.set_fact:
+    domain: "{{ domain_list[0] }}"
+
+- name: Build domain list appending
+  ansible.builtin.set_fact:
+    certbot_domains: "{{ domain_list | map('regex_replace', '^(.*)$', '-d \\1') | join(' ') }}"
+
+- name: Reverse first domain
+  ansible.builtin.set_fact:
+    reversed_domain: "{{ domain.split('.') | reverse | join('.') }}"
+
 - name: Stop HAProxy
   become: true
   ansible.builtin.systemd:
@@ -10,13 +26,13 @@
   retries: 3
   ansible.builtin.command:
     cmd: >
-      certbot certonly --standalone -d kamuridesu.com -d count.kamuridesu.com -d api.kamuridesu.com -d inv.kamuridesu.com -d argo.kamuridesu.com -d www.kamuridesu.com -d notes.kamuridesu.com -d keycloak.kamuridesu.com --non-interactive --agree-tos --email myk.gata14@gmail.com
-    creates: /etc/letsencrypt/live/kamuridesu.com/fullchain.pem
+      certbot certonly --standalone {{ certbot_domains }} --non-interactive --agree-tos --email
+    creates: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
 
 - name: Create SSL directory
   become: true
   ansible.builtin.file:
-    path: /etc/ssl/com.kamuridesu/
+    path: /etc/ssl/{{ reversed_domain }}/
     state: directory
     mode: '0755'
 
@@ -25,8 +41,8 @@
   ansible.builtin.shell:
     executable: /bin/bash
     cmd: >
-      set -o pipefail && cat /etc/letsencrypt/live/kamuridesu.com/fullchain.pem /etc/letsencrypt/live/kamuridesu.com/privkey.pem | tee /etc/ssl/com.kamuridesu/com.kamuridesu.pem
-    creates: /etc/ssl/com.kamuridesu/com.kamuridesu.pem
+      set -o pipefail && cat /etc/letsencrypt/live/{{ domain }}/fullchain.pem /etc/letsencrypt/live/{{ domain }}/privkey.pem | tee /etc/ssl/{{ reversed_domain }}/{{ reversed_domain }}.pem
+    creates: /etc/ssl/{{ reversed_domain }}/{{ reversed_domain }}.pem
 
 - name: Enable HAProxy
   become: true

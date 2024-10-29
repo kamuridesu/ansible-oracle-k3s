@@ -3,7 +3,7 @@
 Playbook for creating K3S, Load balancer and proxy infrastructure on Oracle.
 
 # Usage:
-See inventory/hosts.example to check on how to setup your inventory
+See inventory/hosts.example to check on how to setup your inventory, then set a POSTGRES_PASSWORD env var to setup PostgresSQL on the VMs. You may also need to use extra vars named domains to load your domain names and create the certificate.
 
 # Roles
 ## mommon
@@ -15,8 +15,5 @@ Tasks to setup a control plane for K3S. It need to have a "POSTGRES_PASSWORD" se
 ## worker
 Tasks to setup a worker for K3S
 
-## proxy
-Tasks to setup a proxy on Oracle. It needs to have two environment variables set: DANTE_USER and DANTE_PASSWORD
-
 ## lb
-Tasks to setup load balancer
+Tasks to setup load balancer, it uses the extra var domains to create your let's encrypt certificate.
