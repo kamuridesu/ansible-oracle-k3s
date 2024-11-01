@@ -19,7 +19,7 @@
 
 - name: Clone ArgoCD files repository
   ansible.builtin.git:
-    repo: https://github.com/kamuridesu/argocd-apps-test-helm.git
+    repo: https://github.com/kamuridesu/argocd-k3s-base-config.git
     dest: /tmp/argocd-helm
     clone: true
     update: true
