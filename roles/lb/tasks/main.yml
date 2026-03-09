@@ -63,3 +63,12 @@
 - name: Setup certificates
   ansible.builtin.include_tasks:
     file: tasks/certbot.yml
+  tags:
+    - cert
+
+- name: Enable HAProxy
+  become: true
+  ansible.builtin.systemd:
+    name: haproxy
+    enabled: true
+    state: started
