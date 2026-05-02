@@ -1,0 +1,135 @@
+---
+- name: Upgrade K3s Control Plane
+  hosts: master
+  serial: 1
+  vars:
+    k3s_version: "v1.35.4+k3s1"
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  tasks:
+    - name: Get private IP
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail;
+          hostname -I | cut -d " " -f 1
+        executable: /bin/bash
+      register: primary_ip_cmd
+      changed_when: false
+
+    - name: Ensure K3s service is running before starting
+      become: true
+      ansible.builtin.systemd:
+        name: k3s
+        state: started
+
+    - name: Ensure K3s config is readable by non-root user
+      become: true
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/k3s.yaml
+        mode: "0644"
+
+    - name: Cordon master node
+      ansible.builtin.command: kubectl cordon {{ inventory_hostname }}
+      changed_when: true
+
+    - name: Drain master node
+      ansible.builtin.command: >
+        kubectl drain {{ inventory_hostname }} 
+        --ignore-daemonsets --delete-emptydir-data --force
+      changed_when: true
+      ignore_errors: true
+
+    - name: Upgrade K3s master
+      become: true
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail;
+          curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="--disable=traefik --cluster-cidr=192.168.0.0/16 --tls-san {{ primary_ip_cmd.stdout }} --tls-san {{ ansible_host }} --advertise-address {{ primary_ip_cmd.stdout }} --node-external-ip={{ ansible_host }}" sh -
+        executable: /bin/bash
+
+    - name: Ensure K3s config is readable by non-root user
+      become: true
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/k3s.yaml
+        mode: "0644"
+
+    - name: Wait for master node to be Ready
+      ansible.builtin.command: kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: node_status
+      until: node_status.stdout == "True"
+      retries: 12
+      delay: 10
+      changed_when: false
+
+    - name: Uncordon master node
+      ansible.builtin.command: kubectl uncordon {{ inventory_hostname }}
+      changed_when: true
+- name: Upgrade K3s Worker Nodes
+  hosts: worker
+  serial: 1
+  vars:
+    k3s_version: "v1.35.4+k3s1"
+  tasks:
+    - name: Get primary private IP from master
+      delegate_to: "k3s-cp"
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail;
+          hostname -I | cut -d " " -f 1
+        executable: /bin/bash
+      register: primary_ip_cmd
+      changed_when: false
+
+    - name: Get node-token content on master
+      delegate_to: "k3s-cp"
+      become: true
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: password_output
+
+    - name: Set password as fact
+      delegate_to: "k3s-cp"
+      ansible.builtin.set_fact:
+        master_password: "{{ password_output.content | b64decode | trim }}"
+
+    - name: Cordon worker node
+      delegate_to: k3s-cp
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ansible.builtin.command: kubectl cordon {{ inventory_hostname }}
+      changed_when: true
+
+    - name: Drain worker node
+      delegate_to: k3s-cp
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ansible.builtin.command: >
+        kubectl drain {{ inventory_hostname }} 
+        --ignore-daemonsets --delete-emptydir-data --force
+      changed_when: true
+
+    - name: Upgrade K3s agent
+      become: true
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail;
+          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="agent" K3S_TOKEN="{{ master_password }}" sh -s - --server "https://{{ primary_ip_cmd.stdout }}:6443"
+        executable: /bin/bash
+
+    - name: Wait for worker node to be Ready
+      delegate_to: k3s-cp
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ansible.builtin.command: kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: worker_status
+      until: worker_status.stdout == "True"
+      retries: 12
+      delay: 10
+      changed_when: false
+
+    - name: Uncordon worker node
+      delegate_to: k3s-cp
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ansible.builtin.command: kubectl uncordon {{ inventory_hostname }}
+      changed_when: true

@@ -25,12 +25,12 @@
   remote_user: ubuntu
   roles:
     - role: lb
-  tags:
-    load-balancer
+  tags: load-balancer
 
-# - name: Update
-#   gather_facts: true
-#   hosts: all
-#   remote_user: ubuntu
-#   roles:
-#     - role: update
+- name: Update
+  gather_facts: true
+  hosts: all
+  remote_user: ubuntu
+  roles:
+    - role: update
+  tags: update
